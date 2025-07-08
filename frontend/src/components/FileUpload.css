@@ -1,0 +1,144 @@
+.file-upload-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.file-upload-area {
+  border: 3px dashed #007bff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  position: relative;
+}
+
+.file-upload-area:hover {
+  border-color: #0056b3;
+  background: #e9ecef;
+}
+
+.file-upload-area.dragging {
+  border-color: #28a745;
+  background: #d4edda;
+  transform: scale(1.02);
+}
+
+.file-upload-area.uploading {
+  border-color: #ffc107;
+  background: #fff3cd;
+  cursor: not-allowed;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.upload-icon {
+  font-size: 4rem;
+  opacity: 0.7;
+}
+
+.upload-prompt h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.upload-prompt p {
+  margin: 0;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.supported-formats {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  margin-top: 10px;
+}
+
+.supported-formats p {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.supported-formats span {
+  color: #007bff;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.file-limit {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.file-limit p {
+  margin: 0;
+}
+
+.upload-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  margin-top: 15px;
+  padding: 12px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  color: #721c24;
+  text-align: center;
+}
+
+.upload-info {
+  margin-top: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.upload-info h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.upload-info ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.upload-info li {
+  margin: 8px 0;
+  color: #495057;
+  font-size: 0.95rem;
+}

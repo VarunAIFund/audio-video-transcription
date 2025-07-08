@@ -1,10 +1,28 @@
-# Environment variables
+# ================================
+# Environment Variables & Secrets
+# ================================
 .env
 .env.local
 .env.production
 .env.staging
+.env.development.local
+.env.test.local
+.env.production.local
 
+# API Keys and Tokens (extra safety)
+*api_key*
+*API_KEY*
+*token*
+*TOKEN*
+*.secret
+*_key
+*_secret
+keys/
+secrets/
+
+# ================================
 # Python
+# ================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,10 +40,34 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Flask stuff
+instance/
+.webassets-cache
 
 # Virtual environments
 venv/
@@ -33,58 +75,488 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv
 
-# IDE
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ================================
+# Node.js & React
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# React build output
+frontend/build/
+build/
+out/
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ================================
+# Operating Systems
+# ================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ================================
+# IDEs & Editors
+# ================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
-# Audio/Video files (optional - uncomment if you don't want to track media files)
-# *.mp3
-# *.mp4
-# *.wav
-# *.m4a
-# *.aac
-# *.flac
-# *.ogg
+# Vim
+.*.swp
+.*.swo
+Session.vim
 
-# Generated transcript files (optional - uncomment if you don't want to track outputs)
-# *.txt
-# *_es.txt
-# *_zh.txt
-# *_summary.md
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
 
-# Test files directory
-/test_files/
+# ================================
+# Application Specific
+# ================================
 
-# Temporary files
+# Upload and processing directories
+uploads/
+results/
+logs/
+
+# Audio/Video test files (keep small samples, ignore large files)
+test_files/*.mp4
+test_files/*.mp3
+test_files/*.wav
+test_files/*.m4a
+test_files/*.aac
+test_files/*.flac
+test_files/*.ogg
+test_files/*.webm
+test_files/*.avi
+test_files/*.mov
+
+# Keep test_files directory structure
+!test_files/
+!test_files/.gitkeep
+!test_files/README.md
+
+# Generated transcript and translation files
+*.txt
+!README*.txt
+!requirements*.txt
+!backend-requirements.txt
+
+# Generated summary files
+*_summary.md
+!README*.md
+!CLAUDE.md
+
+# Translation files (unless specifically needed)
+*_es.txt
+*_zh.txt
+*_fr.txt
+*_de.txt
+*_ja.txt
+*_ko.txt
+*_th.txt
+*_sv.txt
+*_no.txt
+*_da.txt
+*_fi.txt
+*_pl.txt
+*_tr.txt
+*_he.txt
+*_cs.txt
+*_hu.txt
+*_ro.txt
+*_bg.txt
+*_hr.txt
+*_sk.txt
+*_sl.txt
+*_et.txt
+*_lv.txt
+*_lt.txt
+*_uk.txt
+*_el.txt
+*_id.txt
+*_ms.txt
+*_tl.txt
+*_bn.txt
+*_ta.txt
+*_te.txt
+*_mr.txt
+*_gu.txt
+*_kn.txt
+*_ml.txt
+*_pa.txt
+*_ur.txt
+*_fa.txt
+*_sw.txt
+*_am.txt
+*_zu.txt
+*_af.txt
+
+# ================================
+# AI/ML Models & Cache
+# ================================
+# PyTorch models
+*.pth
+*.pt
+
+# TensorFlow models
+*.pb
+*.h5
+
+# Large language model files
+*.gguf
+*.ggml
+*.bin
+*.safetensors
+
+# Hugging Face cache
+.huggingface/
+
+# PyAnnote models
+.cache/
+models/
+checkpoints/
+
+# Audio processing cache
+processing/
+audio_cache/
+
+# ================================
+# Temporary & Processing Files
+# ================================
 *.tmp
 *.temp
 temp/
 tmp/
 
-# PyTorch/ML models cache
-.cache/
-models/
-checkpoints/
+# Audio processing temporary files
+*.wav.tmp
+*.mp3.tmp
+processing_temp/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Translation temporary files
+translations_temp/
+temp_translations/
 
-# pyenv
-.python-version
+# Summary temporary files
+summaries_temp/
+temp_summaries/
 
-# Logs
+# Job processing files
+jobs/
+job_queue/
+job_results/
+
+# Session data
+sessions/
+session_data/
+
+# ================================
+# Database Files
+# ================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ================================
+# Logs & Monitoring
+# ================================
 *.log
 logs/
+app.log
+error.log
+access.log
+debug.log
+
+# Performance profiling
+perf_data/
+profiling_results/
+*.prof
+*.profile
+
+# Memory dumps
+*.dump
+*.core
+
+# ================================
+# Build & Distribution
+# ================================
+build/
+dist/
+out/
+
+# Compiled assets
+compiled/
+minified/
+optimized/
+
+# Source maps
+*.map
+
+# Package files
+*.deb
+*.rpm
+*.msi
+*.dmg
+*.pkg
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ================================
+# Security & Certificates
+# ================================
+# Certificate files
+*.pem
+*.key
+*.crt
+*.p12
+
+# SSL certificates for local development
+localhost.pem
+localhost-key.pem
+ssl/
+
+# Security scan results
+*.sarif
+security_reports/
+
+# Dependency vulnerability reports
+audit_reports/
+vulnerability_reports/
+
+# ================================
+# Testing & Development
+# ================================
+# Test outputs
+test_output/
+test_results/
+coverage_reports/
+
+# Mock data for development
+mock_data/
+fake_data/
+sample_data/
+
+# Integration test data
+integration_test_data/
+e2e_test_data/
+
+# Load testing
+load_test_results/
+stress_test_results/
+
+# ================================
+# Deployment & Infrastructure
+# ================================
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+
+# Kubernetes
+*.yaml.local
+*.yml.local
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Environment-specific configs
+config.local.*
+settings.local.*
+
+# Local override files
+override/
+overrides/
+local_overrides/
+
+# ================================
+# Documentation & Reports
+# ================================
+# Generated API documentation
+api_docs/
+swagger_docs/
+
+# Documentation builds
+docs/build/
+docs/_build/
+
+# Static analysis results
+static_analysis/
+code_quality/
+
+# Dependency graphs
+dependency_graph.*
+deps_graph.*
+
+# Performance benchmarks
+benchmarks/
+performance_tests/
+
+# ================================
+# Miscellaneous
+# ================================
+# Backup files
+backup/
+backups/
+*.backup
+*.bak
+
+# Archive directories
+archive/
+archives/
+old/
+
+# Custom application directories
+custom_models/
+user_models/
+private/
+
+# Experimental features
+experimental/
+beta/
+alpha/
+
+# Financial/billing data
+billing/
+costs/
+usage/
+
+# User data
+user_data/
+user_uploads/
+user_results/
+
+# Monitor and metrics
+metrics/
+monitoring/
+alerts/
+
+# CI/CD sensitive data
+.github/workflows/secrets/
+.gitlab-ci-local/
+jenkins_home/
+
+# Local development overrides
+local/
+dev/
+development/
+
+# Production builds
+prod/
+production/
+
+# Runtime files
+*.pid
+*.lock
+*.sock

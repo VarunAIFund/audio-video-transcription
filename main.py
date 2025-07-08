@@ -81,24 +81,119 @@ def perform_speaker_diarization(audio_path):
     try:
         print("👥 Performing speaker diarization...")
         
-        # Initialize the speaker diarization pipeline
-        # Note: This requires a Hugging Face token for some models
-        pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
+        # Try pyannote first (if available)
+        try:
+            from pyannote.audio import Pipeline
+            
+            # Check for HuggingFace token
+            hf_token = os.getenv('HF_TOKEN')
+            
+            if hf_token:
+                # Try models in order of preference
+                models_to_try = [
+                    "pyannote/speaker-diarization-3.1",
+                    "pyannote/speaker-diarization"
+                ]
+                
+                pipeline = None
+                for model_name in models_to_try:
+                    try:
+                        print(f"🔄 Trying pyannote model: {model_name}")
+                        pipeline = Pipeline.from_pretrained(model_name, use_auth_token=hf_token)
+                        
+                        # Test the pipeline
+                        diarization = pipeline(audio_path)
+                        
+                        # Convert to list of tuples (start_time, end_time, speaker_label)
+                        speaker_segments = []
+                        for turn, _, speaker in diarization.itertracks(yield_label=True):
+                            speaker_segments.append((turn.start, turn.end, speaker))
+                        
+                        print(f"✅ PyAnnote completed - Found {len(set(seg[2] for seg in speaker_segments))} speakers")
+                        return speaker_segments
+                        
+                    except Exception as e:
+                        print(f"❌ PyAnnote model {model_name} failed: {str(e)[:100]}...")
+                        continue
         
-        # Apply the pipeline to the audio file
-        diarization = pipeline(audio_path)
+        except ImportError:
+            print("⚠️  PyAnnote not available")
         
-        # Convert to list of tuples (start_time, end_time, speaker_label)
-        speaker_segments = []
-        for turn, _, speaker in diarization.itertracks(yield_label=True):
-            speaker_segments.append((turn.start, turn.end, speaker))
-        
-        print(f"✅ Speaker diarization completed - Found {len(set(seg[2] for seg in speaker_segments))} speakers")
-        return speaker_segments
+        # Fallback to simple speaker detection
+        print("🔄 Using simple speaker detection fallback...")
+        return simple_speaker_detection_fallback(audio_path)
         
     except Exception as e:
         print(f"❌ Speaker diarization error: {str(e)}")
-        print("💡 Note: Speaker diarization requires a Hugging Face token for some models")
+        return None
+
+def simple_speaker_detection_fallback(audio_path, num_speakers=2):
+    """Simple speaker detection fallback using librosa"""
+    try:
+        import librosa
+        import numpy as np
+        from sklearn.cluster import KMeans
+        
+        # Load audio
+        y, sr = librosa.load(audio_path, sr=16000)
+        
+        # Extract features
+        mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        spectral_centroids = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        
+        # Combine features
+        features = np.vstack([
+            mfccs,
+            spectral_centroids.reshape(1, -1),
+            chroma
+        ])
+        
+        # Window the features
+        window_size = 50
+        hop_size = 25
+        
+        windowed_features = []
+        times = []
+        
+        for i in range(0, features.shape[1] - window_size, hop_size):
+            window = features[:, i:i+window_size]
+            windowed_features.append(window.mean(axis=1))
+            times.append(i * 512 / sr)
+        
+        windowed_features = np.array(windowed_features)
+        
+        # Cluster features
+        if len(windowed_features) < num_speakers:
+            num_speakers = 1
+        
+        if num_speakers == 1:
+            labels = np.zeros(len(windowed_features))
+        else:
+            kmeans = KMeans(n_clusters=num_speakers, random_state=42, n_init=10)
+            labels = kmeans.fit_predict(windowed_features)
+        
+        # Create speaker segments
+        segments = []
+        current_speaker = labels[0]
+        segment_start = times[0]
+        
+        for i in range(1, len(labels)):
+            if labels[i] != current_speaker:
+                segment_end = times[i]
+                segments.append((segment_start, segment_end, f"SPEAKER_{current_speaker:02d}"))
+                current_speaker = labels[i]
+                segment_start = times[i]
+        
+        # Add final segment
+        if len(times) > 0:
+            segments.append((segment_start, times[-1], f"SPEAKER_{current_speaker:02d}"))
+        
+        print(f"✅ Simple speaker detection completed - Found {len(set(seg[2] for seg in segments))} speakers")
+        return segments
+        
+    except Exception as e:
+        print(f"❌ Simple speaker detection failed: {str(e)}")
         return None
 
 def transcribe_audio(audio_path, client):
@@ -128,16 +223,20 @@ def align_speakers_with_transcript(transcript_data, speaker_segments):
         
         if not speaker_segments:
             # If no speaker diarization, return transcript as single speaker
-            return transcript_data.text, [{"speaker": "Speaker 1", "text": transcript_data.text, "start": 0, "end": transcript_data.words[-1]["end"] if transcript_data.words else 0}]
+            return transcript_data.text, [{"speaker": "Speaker 1", "text": transcript_data.text, "start": 0, "end": transcript_data.words[-1].end if transcript_data.words else 0}]
         
         # Create speaker-labeled segments
         speaker_transcript_segments = []
         current_segment = {"speaker": None, "text": "", "start": None, "end": None}
         
         for word_info in transcript_data.words:
-            word_start = word_info["start"]
-            word_end = word_info["end"]
-            word_text = word_info["word"]
+            word_start = word_info.start
+            word_end = word_info.end
+            word_text = word_info.word
+            
+            # Clean up word text - ensure proper spacing
+            if word_text and not word_text.startswith(' '):
+                word_text = ' ' + word_text
             
             # Find which speaker is speaking at this time
             speaker_at_time = None
@@ -159,12 +258,12 @@ def align_speakers_with_transcript(transcript_data, speaker_segments):
                 
                 current_segment = {
                     "speaker": speaker_name,
-                    "text": word_text,
+                    "text": word_text.strip(),  # Remove leading/trailing spaces for first word
                     "start": word_start,
                     "end": word_end
                 }
             else:
-                # Same speaker, append to current segment
+                # Same speaker, append to current segment with proper spacing
                 current_segment["text"] += word_text
                 current_segment["end"] = word_end
         
@@ -381,13 +480,13 @@ def process_mp4(mp4_file_path):
             if not extract_audio_from_mp4(mp4_file_path, temp_audio_path):
                 return None
             
-            # Perform speaker diarization
-            speaker_segments = perform_speaker_diarization(temp_audio_path)
-            
             # Transcribe audio using Whisper API with timestamps
             transcript_data = transcribe_audio(temp_audio_path, client)
             if not transcript_data:
                 return None
+            
+            # Perform speaker diarization (optional)
+            speaker_segments = perform_speaker_diarization(temp_audio_path)
             
             # Align speakers with transcript
             speaker_transcript, speaker_segments_data = align_speakers_with_transcript(transcript_data, speaker_segments)
