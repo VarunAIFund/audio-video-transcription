@@ -1,0 +1,90 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Audio/Video files (optional - uncomment if you don't want to track media files)
+# *.mp3
+# *.mp4
+# *.wav
+# *.m4a
+# *.aac
+# *.flac
+# *.ogg
+
+# Generated transcript files (optional - uncomment if you don't want to track outputs)
+# *.txt
+# *_es.txt
+# *_zh.txt
+# *_summary.md
+
+# Test files directory
+/test_files/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# PyTorch/ML models cache
+.cache/
+models/
+checkpoints/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Logs
+*.log
+logs/
