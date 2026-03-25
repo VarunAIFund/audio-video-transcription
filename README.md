@@ -1,284 +1,280 @@
-# 🎬 Audio/Video Transcription Web Application
+# Audio/Video Transcription Service
 
-A full-stack web application that converts audio/video files into transcripts with speaker identification, translations, and AI-generated summaries.
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.3-000000?style=flat&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9-3178C6?style=flat&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![OpenAI](https://img.shields.io/badge/OpenAI-Whisper%20%2B%20GPT--4-412991?style=flat&logo=openai&logoColor=white)](https://openai.com)
+
+A full-stack web application that transcribes audio and video files with automatic speaker identification, multi-language translation, and AI-generated summaries — all running locally on your machine.
+
+---
 
 ## Features
 
-- 🎵 **Multi-format Support**: MP4, MP3, WAV, M4A, AAC, FLAC, OGG, WebM, AVI, MOV
-- 👥 **Speaker Diarization**: Automatic speaker identification and labeling
-- 🎤 **AI Transcription**: OpenAI Whisper API for accurate transcription
-- 🌍 **Multi-language Translation**: Any language translations using GPT-4 (50+ predefined languages + custom input)
-- 📋 **Smart Summaries**: Structured summaries with action items and key points
-- 📱 **Modern UI**: Responsive React frontend with real-time progress tracking
-- ⬇️ **File Downloads**: Download all results as text/markdown files
+- **Multi-format support** — Accepts MP4, MP3, WAV, M4A, AAC, FLAC, OGG, WebM, AVI, MOV
+- **Speaker diarization** — Automatically identifies and labels distinct speakers using PyAnnote.audio, with a librosa/k-means fallback
+- **AI transcription** — High-accuracy transcription via OpenAI Whisper API with word-level timestamps
+- **Multi-language translation** — Translate transcripts into 50+ languages (predefined or custom input) using GPT-4, with speaker labels preserved
+- **Structured summaries** — GPT-4 generates an executive summary, key points, decisions made, and action items
+- **Real-time progress tracking** — React frontend polls job status and renders a live progress bar through each processing stage
+- **Downloadable results** — Export the transcript, any translation, and the summary as individual text/markdown files
+
+---
 
 ## Architecture
 
-- **Backend**: Flask API with background job processing
-- **Frontend**: React TypeScript application
-- **AI Services**: OpenAI Whisper API + GPT-4
-- **Speaker Detection**: PyAnnote.audio + Librosa fallback
-
-## Setup Instructions
-
-### Prerequisites
-
-1. **Python 3.8+** installed
-2. **Node.js 16+** and npm installed
-3. **FFmpeg** installed:
-
-   ```bash
-   # macOS
-   brew install ffmpeg
-
-   # Ubuntu/Debian
-   sudo apt install ffmpeg
-
-   # Windows - download from https://ffmpeg.org/download.html
-   ```
-
-### Backend Setup
-
-1. **Install Python dependencies**:
-
-   ```bash
-   pip install -r backend-requirements.txt
-   ```
-
-2. **Configure environment variables**:
-
-   ```bash
-   # Copy your existing .env file or create a new one
-   # Make sure it contains:
-   OPENAI_API_KEY=your_openai_api_key_here
-   HF_TOKEN=your_huggingface_token_here  # Optional for PyAnnote
-   ```
-
-3. **Create required directories**:
-   ```bash
-   mkdir uploads results
-   ```
-
-### Frontend Setup
-
-1. **Navigate to frontend directory**:
-
-   ```bash
-   cd frontend
-   ```
-
-2. **Install npm dependencies**:
-   ```bash
-   npm install
-   ```
-
-### Running the Application
-
-#### Start Backend (Terminal 1)
-
-```bash
-# From project root directory
-python app.py
+```
+┌─────────────────────────┐        ┌──────────────────────────────────┐
+│   React Frontend        │        │   Flask Backend                  │
+│   (TypeScript)          │        │                                  │
+│                         │  HTTP  │  POST /api/upload                │
+│  FileUpload       ──────┼───────►│    └─ saves file                 │
+│  LanguageSelector       │        │    └─ spawns background thread   │
+│  ProgressTracker  ◄─────┼────────│                                  │
+│  ResultsDisplay         │  poll  │  GET  /api/status/<job_id>       │
+│                         │        │  GET  /api/results/<job_id>      │
+│  localhost:3000         │        │  GET  /api/download/<job_id>/... │
+└─────────────────────────┘        │                                  │
+                                   │  Background Thread               │
+                                   │    1. Validate & extract audio   │
+                                   │       (FFmpeg → 16 kHz WAV)      │
+                                   │    2. Speaker diarization        │
+                                   │       (PyAnnote or librosa)      │
+                                   │    3. Transcribe (Whisper API)   │
+                                   │    4. Align speakers + words     │
+                                   │    5. Translate (GPT-4)          │
+                                   │    6. Summarise (GPT-4)          │
+                                   │                                  │
+                                   │  localhost:5000                  │
+                                   └──────────────────────────────────┘
 ```
 
-Backend will run on: `http://localhost:5000`
+Job state is held in-process (Python dict). The React frontend polls `/api/status` every 2 seconds and transitions from the upload view → progress view → results view automatically.
 
-#### Start Frontend (Terminal 2)
+---
+
+## Supported Formats
+
+| Type  | Extensions                                        |
+|-------|---------------------------------------------------|
+| Video | MP4, AVI, MOV, WebM                               |
+| Audio | MP3, WAV, M4A, AAC, FLAC, OGG                     |
+
+Maximum file size: **25 MB** (OpenAI Whisper API constraint).
+
+---
+
+## Prerequisites
+
+| Dependency | Version | Install |
+|---|---|---|
+| Python | 3.8+ | [python.org](https://python.org) |
+| Node.js | 16+ | [nodejs.org](https://nodejs.org) |
+| FFmpeg | any recent | see below |
+
+**Install FFmpeg:**
 
 ```bash
-# From frontend directory
+# macOS
+brew install ffmpeg
+
+# Ubuntu / Debian
+sudo apt install ffmpeg
+
+# Windows
+# Download from https://ffmpeg.org/download.html and add to PATH
+```
+
+---
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone <repo-url>
+cd audio-video-transcription
+```
+
+### 2. Backend
+
+```bash
+# Install Python dependencies
+pip install -r backend-requirements.txt
+
+# Create a .env file with your API keys
+cat > .env << 'EOF'
+OPENAI_API_KEY=your_openai_api_key_here
+HF_TOKEN=your_huggingface_token_here   # Optional — enables PyAnnote diarization
+EOF
+```
+
+> **HF_TOKEN** is optional. Without it the app falls back to a librosa/k-means speaker detection approach. To use PyAnnote, create a free token at [huggingface.co](https://huggingface.co/settings/tokens) and accept the [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1) model terms.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+---
+
+## Running the Application
+
+### Option A — one command (recommended)
+
+```bash
+./start-app.sh
+```
+
+This script checks dependencies, starts the Flask backend in the background, then launches the React dev server. Press `Ctrl+C` to stop both.
+
+### Option B — two terminals
+
+**Terminal 1 — backend:**
+
+```bash
+python app.py
+# Listening on http://localhost:5000
+```
+
+**Terminal 2 — frontend:**
+
+```bash
 cd frontend
 npm start
+# Opens http://localhost:3000
 ```
 
-Frontend will run on: `http://localhost:3000`
+---
 
-### Usage
+## Usage
 
-1. **Open your browser** to `http://localhost:3000`
-2. **Select translation languages** (optional): Choose from 12 popular languages or add any custom language
-3. **Choose summary option** (optional): Generate structured summary with action items
-4. **Upload your file**: Drag & drop or click to select audio/video file (max 25MB)
-5. **Monitor progress**: Real-time progress tracking with status updates
-6. **View results**: Tabbed interface showing transcript, translations, and summary
-7. **Download files**: Individual downloads or all files at once
+1. Open **http://localhost:3000** in your browser.
+2. **(Optional)** Select one or more translation languages from the dropdown — choose from 12 pre-configured languages with flags, or type any language name / ISO code (e.g. `Swedish`, `th`, `Urdu`).
+3. **(Optional)** Toggle the summary switch to generate a structured meeting summary.
+4. Drag and drop your audio/video file onto the upload zone, or click to browse.
+5. Watch real-time progress as the file moves through extraction → diarization → transcription → translation → summary.
+6. View results in a tabbed interface: **Transcript**, one tab per language, and **Summary**.
+7. Download any individual result or all files at once.
 
-## API Endpoints
+---
 
-### Backend API (`http://localhost:5000`)
+## API Reference
 
-| Endpoint                                | Method | Description                      |
-| --------------------------------------- | ------ | -------------------------------- |
-| `/api/health`                           | GET    | Health check                     |
-| `/api/upload`                           | POST   | Upload file and start processing |
-| `/api/status/<job_id>`                  | GET    | Get job status and progress      |
-| `/api/results/<job_id>`                 | GET    | Get processing results           |
-| `/api/download/<job_id>/<content_type>` | GET    | Download specific result file    |
+Base URL: `http://localhost:5000`
 
-### Upload Parameters
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check |
+| `POST` | `/api/upload` | Upload a file and start a transcription job |
+| `GET` | `/api/status/<job_id>` | Poll job progress (`0–100`) and status |
+| `GET` | `/api/results/<job_id>` | Retrieve completed results (transcript, translations, summary) |
+| `GET` | `/api/download/<job_id>/<type>` | Stream a result file (`original`, `summary`, or a language key) |
 
-- `file`: Audio/video file (multipart/form-data)
-- `languages`: Array of language codes or names (e.g., `spanish`, `french`, `thai`, `sv`, `korean`)
-- `include_summary`: Boolean string (`true`/`false`)
+**Upload form fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `file` | `File` | The audio/video file (multipart) |
+| `languages` | `string[]` | Language codes or names — repeat for multiple |
+| `include_summary` | `"true"` / `"false"` | Whether to generate a summary |
+
+---
 
 ## Language Support
 
-### Popular Languages (Pre-configured with Flags)
+**12 pre-configured languages** (shown with flags in the UI):
 
-- Spanish (🇪🇸), Chinese (🇨🇳), French (🇫🇷), German (🇩🇪)
-- Italian (🇮🇹), Portuguese (🇵🇹), Russian (🇷🇺), Japanese (🇯🇵)
-- Korean (🇰🇷), Arabic (🇸🇦), Hindi (🇮🇳), Dutch (🇳🇱)
+Spanish, Chinese, French, German, Italian, Portuguese, Russian, Japanese, Korean, Arabic, Hindi, Dutch
 
-### Custom Language Input
+**Custom input** — type any of the following and the app resolves it automatically:
 
-- **Any Language**: Type any language name (e.g., "Swedish", "Thai", "Urdu")
-- **Language Codes**: Use ISO codes (e.g., "sv", "th", "ur")
-- **Case Insensitive**: Works with any capitalization
-- **Dynamic Tabs**: Automatically creates tabs for selected languages
-- **Smart Downloads**: Generates appropriate file names for any language
+- Full name: `Swedish`, `Thai`, `Vietnamese`, `Swahili`
+- ISO 639-1 code: `sv`, `th`, `vi`, `sw`
+- Mixed case: `GERMAN`, `hindi`, `Ko`
 
-### Language Examples
+Translations are performed by GPT-4 with a prompt that explicitly preserves speaker labels and dialogue structure.
 
-```
-Popular: spanish, french, german, japanese, korean
-Codes: es, fr, de, ja, ko, th, vi, sv, no
-Custom: Swedish, Thai, Vietnamese, Norwegian, Swahili
-Mixed: es, French, thai, GERMAN, hindi
-```
+---
 
-### Translation Quality
-
-- Powered by OpenAI GPT-4 for high-quality translations
-- Preserves speaker labels and dialogue structure
-- Maintains original meaning, tone, and style
-- Handles technical terms and proper nouns appropriately
-
-## File Structure
-
-```
-project-10/
-├── app.py                     # Flask API backend
-├── main.py                    # Original CLI script
-├── backend-requirements.txt   # Python dependencies
-├── .env                      # Environment variables
-├── uploads/                  # Uploaded files (auto-created)
-├── results/                  # Generated results (auto-created)
-├── frontend/                 # React application
-│   ├── src/
-│   │   ├── App.tsx           # Main application component
-│   │   ├── App.css           # Global styles
-│   │   └── components/       # React components
-│   │       ├── FileUpload.tsx
-│   │       ├── LanguageSelector.tsx
-│   │       ├── ProgressTracker.tsx
-│   │       ├── ResultsDisplay.tsx
-│   │       └── *.css         # Component styles
-│   ├── package.json
-│   └── public/
-└── test_files/               # Sample audio files
-```
-
-## Components Overview
-
-### FileUpload Component
-
-- Drag & drop file upload
-- File type and size validation
-- Upload progress indication
-- Error handling
-
-### LanguageSelector Component
-
-- Language selection for translations
-- Summary generation toggle
-- Selection summary display
-
-### ProgressTracker Component
-
-- Real-time progress updates
-- Processing step visualization
-- Elapsed time tracking
-- Status polling
-
-### ResultsDisplay Component
-
-- Tabbed results interface
-- Speaker statistics
-- Individual file downloads
-- Formatted transcript display
-
-## Technology Stack
+## Tech Stack
 
 ### Backend
 
-- **Flask**: Web framework
-- **OpenAI**: Whisper API + GPT-4
-- **PyAnnote.audio**: Speaker diarization
-- **Librosa**: Audio processing fallback
-- **FFmpeg**: Audio extraction
-- **Threading**: Background job processing
+| Library | Purpose |
+|---------|---------|
+| Flask + Flask-CORS | REST API and CORS handling |
+| OpenAI (`whisper-1`) | Speech-to-text with word timestamps |
+| OpenAI (`gpt-4`) | Translation and structured summarisation |
+| PyAnnote.audio | Neural speaker diarization |
+| librosa + scikit-learn | Fallback speaker detection via MFCC + k-means |
+| ffmpeg-python | Audio extraction and resampling to 16 kHz mono WAV |
+| python-dotenv | Environment variable management |
+| Python `threading` | Non-blocking background job processing |
 
 ### Frontend
 
-- **React**: UI framework
-- **TypeScript**: Type safety
-- **CSS3**: Modern styling with animations
-- **Fetch API**: HTTP requests
+| Library | Purpose |
+|---------|---------|
+| React 19 | Component-based UI |
+| TypeScript | End-to-end type safety |
+| Fetch API | HTTP communication with the backend |
+| CSS3 | Animations, responsive layout, drag-and-drop states |
 
-## Error Handling
+---
 
-- File validation (type, size)
-- API error responses
-- Network error handling
-- Processing failure recovery
-- User-friendly error messages
+## Project Structure
 
-## Performance Features
+```
+audio-video-transcription/
+├── app.py                      # Flask API — routes and background processing
+├── main.py                     # CLI script for direct file processing
+├── backend-requirements.txt    # Python dependencies (pinned)
+├── requirements.txt            # Minimal CLI requirements
+├── start-app.sh                # Convenience startup script
+├── .env                        # API keys (git-ignored)
+├── uploads/                    # Uploaded files (auto-created, git-ignored)
+├── results/                    # Generated results (auto-created, git-ignored)
+└── frontend/
+    ├── public/
+    └── src/
+        ├── App.tsx             # Root component + shared TypeScript interfaces
+        ├── App.css
+        └── components/
+            ├── FileUpload.tsx       # Drag-and-drop upload with validation
+            ├── LanguageSelector.tsx # Language + summary toggle controls
+            ├── ProgressTracker.tsx  # Polling, progress bar, step visualiser
+            └── ResultsDisplay.tsx   # Tabbed results, speaker stats, downloads
+```
 
-- Background processing for long jobs
-- Real-time progress updates
-- Efficient file streaming
-- Temporary file cleanup
-- Memory-optimized audio processing
-
-## Local-Only Operation
-
-This application is designed to run entirely locally:
-
-- No external hosting required
-- All data stays on your machine
-- Files processed locally
-- Results stored locally
+---
 
 ## Troubleshooting
 
-### Common Issues
+**FFmpeg not found**
+Install FFmpeg and ensure it is on your `PATH`. Verify with `ffmpeg -version`.
 
-1. **FFmpeg not found**: Install FFmpeg using system package manager
-2. **OpenAI API errors**: Check API key in .env file
-3. **PyAnnote access denied**: Verify HuggingFace token or use fallback
-4. **File too large**: Maximum file size is 25MB (Whisper API limit)
-5. **CORS errors**: Ensure Flask backend is running on port 5000
+**OpenAI API errors**
+Check that `OPENAI_API_KEY` is set in `.env` and that your account has access to `whisper-1` and `gpt-4`.
 
-### Port Conflicts
+**PyAnnote access denied**
+Either omit `HF_TOKEN` (the app will use the librosa fallback) or accept the model terms at [huggingface.co/pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1).
 
-If ports 3000 or 5000 are in use:
+**File too large**
+The Whisper API enforces a 25 MB limit. Compress or trim the file before uploading.
 
-- Frontend: Set `PORT=3001` environment variable
-- Backend: Modify `app.run(port=5001)` in app.py and update frontend fetch URLs
+**CORS errors in the browser**
+Ensure the Flask backend is running on port 5000. The frontend hardcodes `http://localhost:5000` as the API base URL.
 
-### Performance Tips
+**Port conflicts**
+- Backend: edit the `app.run(port=...)` call in `app.py`.
+- Frontend: set the `PORT` environment variable before running `npm start`.
 
-- Use MP3 or WAV files for faster processing
-- Smaller files process faster
-- Speaker diarization adds processing time
-- Translations require additional API calls
+---
 
-## Support
+## Local-Only Operation
 
-For issues or questions:
-
-1. Check the troubleshooting section
-2. Verify all dependencies are installed
-3. Ensure environment variables are set correctly
-4. Check console logs for detailed error messages
+This application is designed to run entirely on your local machine. Uploaded files and generated results are written to the `uploads/` and `results/` directories and never sent to any third-party service other than the OpenAI API calls you explicitly trigger.
